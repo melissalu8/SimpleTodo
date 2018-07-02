@@ -1,5 +1,6 @@
 package codepath.com.simpletodo;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -18,6 +19,14 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+
+    // a numeric code to identify the edit activity
+    public static final int EDIT_REQUEST_CODE = 20;
+    // keys used for passing data between activities
+    public static final String ITEM_TEXT = "itemText";
+    public static final String ITEM_POSITION = "itemPosition";
+
+    // rest of class
 
     // you can declare fields here
     ArrayList<String> items;
@@ -48,6 +57,27 @@ public class MainActivity extends AppCompatActivity {
         // setup the listener on creation
         setupListViewListener();
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // EDIT_REQUEST_CODE defined with constants
+        if (resultCode == RESULT_OK && requestCode == EDIT_REQUEST_CODE) {
+            // extract updated item value from result extras
+            String updatedItem = data.getExtras().getString(ITEM_TEXT);
+            // get the position of the item which was edited
+            int position = data.getExtras().getInt(ITEM_POSITION, 0);
+            // update the model with the new item text at the edited position
+            items.set(position, updatedItem);
+            // notify the adapter the model changed
+            itemsAdapter.notifyDataSetChanged();
+            // Store the updated items back to disk
+            writeItems();
+            // notify the user the operation completed OK
+            Toast.makeText(this, "Item updated", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void setupListViewListener() {
         // set the Listview's itemLongClickListener
         lvItems.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -66,7 +96,26 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+        // set up item listener for edit (regular click)
+        lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // create the new activity
+                // pass the data being edited
+                // display the activity
+
+                // first parameter is the context, second is the class of the activity to launch
+                Intent i = new Intent(MainActivity.this, EditItemActivity.class);
+                // put "extras" into the bundle for access in the edit activity
+                i.putExtra(ITEM_TEXT, items.get(position));
+                i.putExtra(ITEM_POSITION, position);
+                // brings up the edit activity with the expectation of a result
+                startActivityForResult(i, EDIT_REQUEST_CODE);
+            }
+        });
     }
+
     public void onAddItem(View v) {
         //obtain a reference to the EditText created with the layout
         EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
@@ -88,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
 
     // read the items from the file system
     private void readItems() {
-            // create the array using the content in the file
+        // create the array using the content in the file
         try {
             items = new ArrayList<String>(FileUtils.readLines(getDataFile(), Charset.defaultCharset()));
         } catch (IOException e) {
@@ -107,9 +156,5 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-        // you can add other methods here
-    }
-
-
-
+    // you can add other methods here
+}
