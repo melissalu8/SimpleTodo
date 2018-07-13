@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/aMenu"
+        android:id="@+id/aTimeline"
         android:enabled="true"
         android:icon="@drawable/ic_instagram_home"
         android:visible="true"
